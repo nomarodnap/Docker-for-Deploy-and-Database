@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       # Run your tests here. Since there is no "test" script in package.json yet,
       # we can run lint and build as a basic check, or you can add a real test script.
       - name: Run Lint
@@ -38,6 +41,8 @@ jobs:
 
       - name: Run Build
         run: npm run build
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
       # If you add tests to package.json (like Jest or Vitest), uncomment this:
       # - name: Run Tests
