@@ -1,0 +1,88 @@
+name: Build and Push to Google Artifact Registry
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: fisheries-idp-4091
+  GAR_LOCATION: asia-southeast3
+  REPOSITORY: my-repo
+  IMAGE: my-docker-app
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Run your tests here. Since there is no "test" script in package.json yet,
+      # we can run lint and build as a basic check, or you can add a real test script.
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Build
+        run: npm run build
+
+      # If you add tests to package.json (like Jest or Vitest), uncomment this:
+      # - name: Run Tests
+      #   run: npm test
+
+  build-and-push:
+    name: Build and Push Docker Image
+    needs: test
+    runs-on: ubuntu-latest
+    # Only run this job if we are on the main branch (e.g., after merging a PR)
+    if: github.ref == 'refs/heads/main'
+
+    # You will need to setup Google Cloud credentials.
+    # For GitHub Actions, Workload Identity Federation is recommended.
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # Replace with your Workload Identity Provider and Service Account
+          workload_identity_provider: "projects/437559225685/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider"
+          service_account: "infrezz@fisheries-idp-4091.iam.gserviceaccount.com"
+          # Or use credentials JSON if you prefer (less secure):
+          # credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Docker Auth
+        run: |-
+          gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
+
+      - name: Build Docker Image
+        run: |-
+          docker build -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.sha }} .
+          docker tag ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.sha }} ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:latest
+
+      - name: Push Docker Image
+        run: |-
+          docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:latest
