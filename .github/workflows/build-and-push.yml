@@ -9,10 +9,11 @@ on:
       - main
 
 env:
-  PROJECT_ID: fisheries-idp-4091
-  GAR_LOCATION: asia-southeast3
-  REPOSITORY: my-repo
-  IMAGE: my-docker-app
+  # 🔴 [REQUIRED CHANGE] เปลี่ยนตัวแปร 4 ตัวด้านล่างให้ตรงกับ Google Cloud ของคุณ
+  PROJECT_ID: fisheries-idp-4091     # Project ID บน Google Cloud
+  GAR_LOCATION: asia-southeast3      # Region ของ Artifact Registry
+  REPOSITORY: my-repo                # ชื่อ Repository ใน Artifact Registry
+  IMAGE: my-docker-app               # ชื่อ Docker Image ที่ต้องการ
 
 jobs:
   test:
@@ -25,6 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
+          # 🟡 [OPTIONAL CHANGE] แก้เป็นเวอร์ชัน Node.js ที่โปรเจกต์คุณใช้
           node-version: "22"
           cache: "npm"
 
@@ -32,6 +34,7 @@ jobs:
         run: npm install
 
       - name: Generate Prisma Client
+        # 🟡 [OPTIONAL CHANGE] ถ้าโปรเจกต์ไม่ได้ใช้ Prisma ให้ลบ 2 บรรทัดนี้ทิ้งได้เลย
         run: npx prisma generate
 
       # Run your tests here. Since there is no "test" script in package.json yet,
@@ -69,6 +72,8 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v3
         with:
+          # 🔴 [REQUIRED CHANGE] คุณต้องนำไฟล์ JSON Key จาก Service Account ของ GCP
+          # มาสร้างเป็น Secret ในหน้าเว็บ GitHub ของโปรเจกต์ใหม่ โดยตั้งชื่อว่า GCP_CREDENTIALS
           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
       - name: Set up Cloud SDK
