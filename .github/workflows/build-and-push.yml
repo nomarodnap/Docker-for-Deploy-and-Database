@@ -37,8 +37,6 @@ jobs:
         # 🟡 [OPTIONAL CHANGE] ถ้าโปรเจกต์ไม่ได้ใช้ Prisma ให้ลบ 2 บรรทัดนี้ทิ้งได้เลย
         run: npx prisma generate
 
-      # Run your tests here. Since there is no "test" script in package.json yet,
-      # we can run lint and build as a basic check, or you can add a real test script.
       - name: Run Lint
         run: npm run lint
 
@@ -47,19 +45,12 @@ jobs:
         env:
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
-      # If you add tests to package.json (like Jest or Vitest), uncomment this:
-      # - name: Run Tests
-      #   run: npm test
-
   build-and-push:
     name: Build and Push Docker Image
     needs: test
     runs-on: ubuntu-latest
-    # Only run this job if we are on the main branch (e.g., after merging a PR)
     if: github.ref == 'refs/heads/main'
 
-    # You will need to setup Google Cloud credentials.
-    # For GitHub Actions, Workload Identity Federation is recommended.
     permissions:
       contents: "read"
       id-token: "write"
@@ -74,7 +65,7 @@ jobs:
         with:
           # 🔴 [REQUIRED CHANGE] คุณต้องนำไฟล์ JSON Key จาก Service Account ของ GCP
           # มาสร้างเป็น Secret ในหน้าเว็บ GitHub ของโปรเจกต์ใหม่ โดยตั้งชื่อว่า GCP_CREDENTIALS
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
