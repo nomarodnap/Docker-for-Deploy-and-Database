@@ -1,6 +1,6 @@
 services:
   web:
-    build: .                 
+    image: asia-southeast3-docker.pkg.dev/fisheries-idp-4091/my-repo/my-docker-app:latest
     container_name: nextjs-app
     ports:
       - "3000:3000"          
